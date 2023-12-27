@@ -1,0 +1,189 @@
+<div class="portfolio">
+    <div class="infoBox">
+        <img alt="My pfp :>" class="avatar" height="64" src="assets/imgs/icons/avatar.jpg" width="64"/>
+        <div class="avatar_text">
+            <h2 class="underline_text">Lucy Hoerner</h2>
+            <h4 class="avatar_text_pronouns">she/they</h4>
+        </div>
+        <div class="infoText">
+            <p>
+                Hey, my name's Lucy and I'm an 18 years old trans girl from Germany.
+                I currently live in North Rhine-Westphalia near Bielefeld.
+                <br><br>
+                In my free-time I'm coding, designing, hearing music or hanging-out with my friends.
+                <br><br>
+                Programming languages I use are Kotlin, Java, C#, C++, C and Rust.
+                <br><br>
+                I'm familiar with application, game and web development.
+            </p>
+        </div>
+    </div>
+</div>
+<style>
+    @import url(main.css);
+
+    .portfolio {
+        animation: portfolio 1s forwards;
+        overflow: hidden;
+    }
+
+    @keyframes portfolio {
+        /* @formatter:off */
+        from { opacity: 0; }
+        to   { opacity: 1; }
+        /* @formatter:on */
+    }
+
+    .avatar {
+        border-radius: 50%;
+        border-width: 1px;
+        animation: avatar_hover_in 0.45s forwards;
+        filter: url('assets/svgs/post.bloom.svg#process');
+    }
+
+    .avatar:hover {
+        animation: avatar_hover_out 0.45s forwards;
+    }
+
+    @keyframes avatar_hover_in {
+        from {
+            box-shadow: -0.0625em -0.0625em 0.09375em rgba(var(--accent), 0.45),
+            0.0625em -0.0625em 0.09375em rgba(var(--accent), 0.45),
+            -0.0625em 0.0625em 0.09375em rgba(var(--accent), 0.45),
+            0.0625em 0.0625em 0.09375em rgba(var(--accent), 0.45);
+        }
+        to {
+            box-shadow: -0.0625em -0.0625em 0.09375em rgba(var(--crust), 1.0),
+            0.0625em -0.0625em 0.09375em rgba(var(--crust), 1.0),
+            -0.0625em 0.0625em 0.09375em rgba(var(--crust), 1.0),
+            0.0625em 0.0625em 0.09375em rgba(var(--crust), 1.0);
+        }
+    }
+
+    @keyframes avatar_hover_out {
+        from {
+            box-shadow: -0.0625em -0.0625em 0.09375em rgba(var(--crust), 1.0),
+            0.0625em -0.0625em 0.09375em rgba(var(--crust), 1.0),
+            -0.0625em 0.0625em 0.09375em rgba(var(--crust), 1.0),
+            0.0625em 0.0625em 0.09375em rgba(var(--crust), 1.0);
+        }
+        to {
+            box-shadow: -0.0625em -0.0625em 0.09375em rgba(var(--accent), 0.45),
+            0.0625em -0.0625em 0.09375em rgba(var(--accent), 0.45),
+            -0.0625em 0.0625em 0.09375em rgba(var(--accent), 0.45),
+            0.0625em 0.0625em 0.09375em rgba(var(--accent), 0.45);
+        }
+    }
+
+    .avatar_text {
+        margin-top: -10px;
+        margin-left: 18px;
+
+        width: fit-content;
+        height: fit-content;
+
+        filter: url('assets/svgs/post.bloom.svg#process');
+
+        background-color: #FFFFFF;
+        background-image: linear-gradient(72deg, rgb(var(--accent)), rgb(var(--text)));
+        background-size: 100%;
+
+        background-clip: text;
+        color: transparent;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .avatar_text_pronouns {
+        text-shadow: none;
+        margin-top: -16px;
+        margin-left: 48px;
+
+        width: fit-content;
+
+        background-color: #FFFFFF;
+        background-image: linear-gradient(72deg, #5BCEFA, #F5A9B8, #FFFFFF, #F5A9B8, #5BCEFA);
+        background-size: 100%;
+
+        background-clip: text;
+        color: transparent;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .underline_text {
+        text-decoration: underline;
+    }
+
+    .infoBox {
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+
+        overflow: scroll;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none;
+
+        min-width: 270px;
+        width: auto;
+        max-width: 270px;
+        height: auto;
+        max-height: calc(100vh - 200px);
+        margin: 12px;
+
+        background-color: rgba(var(--mantle), 0.35);
+
+        padding: 0.87125em;
+        border-radius: 1.1em;
+        animation: header_hover_in 0.45s forwards;
+    }
+
+    .infoBox::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+
+    .infoBox:hover {
+        animation: infoBox_hover_out 0.45s forwards;
+    }
+
+    @keyframes infoBox_hover_in {
+        from {
+            box-shadow: -1px -1px 2px rgba(var(--accent), 0.45),
+            1px -1px 2px rgba(var(--accent), 0.45),
+            -1px 1px 2px rgba(var(--accent), 0.45),
+            1px 1px 2px rgba(var(--accent), 0.45);
+        }
+        to {
+            box-shadow: -1px -1px 2px rgba(var(--crust), 1.0),
+            1px -1px 2px rgba(var(--crust), 1.0),
+            -1px 1px 2px rgba(var(--crust), 1.0),
+            1px 1px 2px rgba(var(--crust), 1.0);
+        }
+    }
+
+    @keyframes infoBox_hover_out {
+        from {
+            box-shadow: -1px -1px 2px rgba(var(--crust), 1.0),
+            1px -1px 2px rgba(var(--crust), 1.0),
+            -1px 1px 2px rgba(var(--crust), 1.0),
+            1px 1px 2px rgba(var(--crust), 1.0);
+        }
+        to {
+            box-shadow: -1px -1px 2px rgba(var(--accent), 0.45),
+            1px -1px 2px rgba(var(--accent), 0.45),
+            -1px 1px 2px rgba(var(--accent), 0.45),
+            1px 1px 2px rgba(var(--accent), 0.45);
+        }
+    }
+
+    .infoText {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: start;
+        justify-content: left;
+        height: auto;
+        max-height: calc(100vh - 212px - 64px);
+        flex-basis: 100%;
+    }
+</style>

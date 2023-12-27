@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0" height="0">
+    <filter id="process">
+        <feGaussianBlur stdDeviation="1" />
+        <feComponentTransfer>
+            <feFuncR type="identity" />
+            <feFuncG type="identity" />
+            <feFuncB type="identity" />
+            <feFuncA type="identity" />
+        </feComponentTransfer>
+        <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+        </feMerge>
+        <feGaussianBlur stdDeviation="2" />
+        <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+        </feMerge>
+        <feGaussianBlur stdDeviation="3" />
+        <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+        </feMerge>
+    </filter>
+</svg>
