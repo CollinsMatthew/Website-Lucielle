@@ -24,6 +24,14 @@ html * {
     scrollbar-width: auto;
 }
 
+rect {
+    shape-rendering: geometricPrecision;
+    fill-opacity: 0.1;
+    stroke: black;
+    stroke-width: 2px;
+    stroke-opacity: 1.0;
+}
+
 ::-webkit-scrollbar-track {
     background-color: rgb(var(--mantle));
     border-radius: 50%;
@@ -66,6 +74,18 @@ main {
 
 /* useful stuff - end */
 
+.flexbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background-color: rgba(var(--mantle), 0.3125);
+    filter: drop-shadow(0 0 20px #1b5e20);
+
+    border-style: wave;
+    border-radius: 4px;
+    animation: header_hover_in 0.3125s forwards;
+}
 
 /* header stuff - start */
 
@@ -252,7 +272,3 @@ main {
 }
 
 /* footer stuff - end */
-
-.post-bloom {
-    filter: url('assets/svgs/post.bloom.svg#process');
-}
