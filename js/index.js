@@ -341,7 +341,7 @@ async function init() {
         .then(json => {
             cardUser.name = json.global_name;
             cardUser.username = json.username;
-            cardUser.avatar = json.avatar.link;
+            cardUser.avatar = `${json.avatar.link}?size=4096`;
             cardUser.accent = json.accent_color;
             cardUser.banner = {
                 "url": json.banner.link,
