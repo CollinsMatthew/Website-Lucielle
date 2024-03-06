@@ -66,9 +66,12 @@ body {
 
 main {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     flex-direction: column;
+    align-items: center;
     width: fit-content;
-    height: calc(100vh - 84px);
+    height: max-content;
 }
 
 ::-moz-selection {
@@ -94,12 +97,15 @@ main {
 /* useful stuff - end */
 
 .flexbox {
-    display: flex;
+    display: inline-block;
+    align-items: center;
     width: fit-content;
     height: fit-content;
-    align-items: flex-start;
-    justify-content: space-between;
-
+    
+    text-align: center;
+    
+    align-content: center;
+    
     background-color: rgba(var(--mantle), 0.3125);
     filter: drop-shadow(0 0 2px rgba(var(--crust), 1.0));
 
@@ -255,11 +261,13 @@ main {
     image-rendering: high-quality;
     image-resolution: from-image;
     animation: image_buttons_hover_out 0.3125s forwards;
+    filter: invert(100%); /* TODO: ... | better workaround */
 }
 
-.socials img:hover {
+/* TODO: ... | better workaround
+socials img:hover {
     animation: image_buttons_hover_in 0.6125s forwards;
-}
+}*/
 
 @keyframes image_buttons_hover_in {
     from {
