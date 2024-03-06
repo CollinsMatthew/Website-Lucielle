@@ -32,6 +32,15 @@ html * {
     scrollbar-width: auto;
 }
 
+canvas {
+    background-color: var(--base);
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: -1 !important;
+}
+
 rect {
     shape-rendering: geometricPrecision;
     fill-opacity: 0.1;
@@ -51,11 +60,13 @@ rect {
 }
 
 body {
-    background-color: rgb(var(--base));
+    background-color: rgba(0, 0, 0, 0.0);
+    z-index: 0;
 }
 
 main {
     display: flex;
+    flex-direction: column;
     width: fit-content;
     height: calc(100vh - 84px);
 }
@@ -84,11 +95,13 @@ main {
 
 .flexbox {
     display: flex;
-    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    align-items: flex-start;
     justify-content: space-between;
 
     background-color: rgba(var(--mantle), 0.3125);
-    filter: drop-shadow(0 0 20px #1b5e20);
+    filter: drop-shadow(0 0 2px rgba(var(--crust), 1.0));
 
     border-style: wave;
     border-radius: 4px;
