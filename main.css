@@ -101,11 +101,11 @@ main {
     align-items: center;
     width: fit-content;
     height: fit-content;
-    
+
     text-align: center;
-    
+
     align-content: center;
-    
+
     background-color: rgba(var(--mantle), 0.3125);
     filter: drop-shadow(0 0 2px rgba(var(--crust), 1.0));
 
@@ -253,51 +253,39 @@ main {
 
 .socials {
     image-rendering: auto;
-    color: rgb(var(--purple));
 }
 
 .socials img {
-    margin: 4px;
+    margin: auto;
+    padding: 4px;
     image-rendering: high-quality;
     image-resolution: from-image;
-    animation: image_buttons_hover_out 0.3125s forwards;
     filter: invert(100%); /* TODO: ... | better workaround */
 }
 
-/* TODO: ... | better workaround
-socials img:hover {
-    animation: image_buttons_hover_in 0.6125s forwards;
-}*/
+.socials i {
+    margin: auto;
+    padding: 4px;
+    image-rendering: high-quality;
+    image-resolution: from-image;
+    font-size: x-large;
+    animation: image_buttons_hover_in 0.3125s forwards;
+}
 
+.socials i:hover {
+    animation: image_buttons_hover_out 0.3125s forwards;
+}
+
+/* @formatter:off */
 @keyframes image_buttons_hover_in {
-    from {
-        color: rgb(var(--purple));
-        box-shadow: -1px -1px 2px rgba(var(--purple), 0.0),
-        1px -1px 2px rgba(var(--purple), 0.0),
-        -1px 1px 2px rgba(var(--purple), 0.0),
-        1px 1px 2px rgba(var(--purple), 0.0);
-    }
-    to {
-        box-shadow: -1px -1px 2px rgba(var(--purple), 0.45),
-        1px -1px 2px rgba(var(--purple), 0.45),
-        -1px 1px 2px rgba(var(--purple), 0.45),
-        1px 1px 2px rgba(var(--purple), 0.45);
-    }
+    from { color: rgb(var(--blue)); }
+    to   { color: rgb(var(--text)); }
 }
 
 @keyframes image_buttons_hover_out {
-    from {
-        box-shadow: -1px -1px 2px rgba(var(--purple), 0.45),
-        1px -1px 2px rgba(var(--purple), 0.45),
-        -1px 1px 2px rgba(var(--purple), 0.45),
-        1px 1px 2px rgba(var(--purple), 0.45);
-    }
-    to {
-        box-shadow: -1px -1px 2px rgba(var(--purple), 0.0),
-        1px -1px 2px rgba(var(--purple), 0.0),
-        -1px 1px 2px rgba(var(--purple), 0.0),
-        1px 1px 2px rgba(var(--purple), 0.0);
-    }
+    from { color: rgb(var(--text)); }
+    to   { color: rgb(var(--blue)); }
 }
+/* @formatter:on */
 
 /* footer stuff - end */
