@@ -325,18 +325,18 @@ function hexToRgb(hex) {
     }
 }
 
-function updateCss() {
+async function updateCss() {
     for (let key in currentPalette) {
         document.documentElement.style.setProperty(`--${key}`, hexToRgb(currentPalette[key]).rgb);
     }
 }
 
 async function init() {
-    initRendering()
-    await updateCss()
+    initRendering();
+    updateCss();
     insertFileContentIn('content', 'home').then();
     document.documentElement.style.setProperty('--background-color', '#FFFFFF');
-    await fetch(`https://discordlookup.mesavirep.xyz/v1/user/${userId}`)
+    fetch(`https://discordlookup.mesavirep.xyz/v1/user/${userId}`)
         .then(response => response.json())
         .then(json => {
             cardUser.name = json.global_name;
@@ -349,7 +349,7 @@ async function init() {
             }
         })
         .catch(error => console.error(error))
-        .then(_ => updateCards())
+        .then(_ => updateCards());
     fetch(`https://api.lanyard.rest/v1/users/${userId}`)
         .then(response => response.json())
         .then(json => {
@@ -360,7 +360,7 @@ async function init() {
             cardUser.status = data.discord_status;
         })
         .catch(error => console.error(error))
-        .then(_ => updateCards())
+        .then(_ => updateCards());
 }
 
 async function initGL(canvas, wglVersion) {
@@ -376,12 +376,12 @@ async function initGL(canvas, wglVersion) {
         1.0, -1.0, 0.0,
         1.0, 1.0, 0.0
     ]), context.STATIC_DRAW);
-    context.bindBuffer(context.ARRAY_BUFFER, null)
+    context.bindBuffer(context.ARRAY_BUFFER, null);
 
     const colors = context.createBuffer();
     context.bindBuffer(context.ARRAY_BUFFER, colors);
     context.bufferData(context.ARRAY_BUFFER, new Float32Array([1.0, 1.0, 1.0, 1.0]), context.STATIC_DRAW);
-    context.bindBuffer(context.ARRAY_BUFFER, null)
+    context.bindBuffer(context.ARRAY_BUFFER, null);
 
     const elements_indices = [3, 2, 1, 3, 1, 0];
     const elements = context.createBuffer();
@@ -401,7 +401,7 @@ async function initGL(canvas, wglVersion) {
     context.compileShader(vertex_shader);
     let vertex_shader_log = context.getShaderInfoLog(vertex_shader);
     if (vertex_shader_log == null || vertex_shader_log.trim().length === 0) {
-        console.info("vertex shader loaded.")
+        console.info("vertex shader loaded.");
     } else console.warn(`vertex shader couldn't be loaded! (${vertex_shader_log})`);
 
     let fragment_shader_code = "";
@@ -415,7 +415,7 @@ async function initGL(canvas, wglVersion) {
     context.compileShader(fragment_shader);
     let fragment_shader_log = context.getShaderInfoLog(vertex_shader);
     if (fragment_shader_log == null || vertex_shader_log.trim().length === 0) {
-        console.info("fragment shader loaded.")
+        console.info("fragment shader loaded.");
     } else console.warn(`fragment shader couldn't be loaded! (${fragment_shader_log})`);
 
     const shaderProgram = context.createProgram();
