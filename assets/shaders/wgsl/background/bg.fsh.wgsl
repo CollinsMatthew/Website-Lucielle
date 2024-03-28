@@ -1,28 +1,25 @@
-[[block]]
-struct Uniforms {
-    model: mat4x4<f32>;
-    time: f32;
-    resolution: vec2<f32>;
-};
+@group(0) @binding(0)
+var<uniform> time: f32;
 
-[[group(0), binding(0)]]
-var<uniform> uniforms: Uniforms;
+@group(0) @binding(0)
+var<uniform> resolution: vec2<f32>;
 
-[[stage(fragment)]]
-fn main([[location(0)]] fragCoord: vec4<f32>) -> [[location(0)]] vec4<f32> {
-    var uv = fragCoord.xy / uniforms.resolution;
-    var s = sin(uniforms.time);
-    var c = cos(uniforms.time);
+@fragment
+// fn mainImage(@builtin(frag_coord) fragCoord: vec4<f32>) -> @location(0) vec4<f32>
+fn fragment_main(fragData: VertexOut) -> @location(0) vec4f {
+    var uv = fragCoord.xy / resolution;
+    var s = sin(time);
+    var c = cos(time);
 
     var artifactRotation: mat3x3<f32> = mat3x3<f32>(
         vec3<f32>(c, 0.0, s),
         vec3<f32>(0.0, 1.0, 0.0),
         vec3<f32>(-s, 0.0, c)
     ) * rotationAlign(vec3<f32>(0.0, 1.0, 0.0), vec3<f32>(s * 0.2, 1.0, c * 0.2 + 0.3));
-    var artifactOffset: vec3<f32> = vec3<f32>(s * 0.4, c * 0.3 - 1.7, -6.0);
+    var artifactOffset = vec3<f32>(s * 0.4, c * 0.3 - 1.7, -6.0);
 
-    var camFwd: vec3<f32> = vec3<f32>(0.0, 0.7 + noise(uniforms.time * 0.8 + 4.0) * 0.08 - 0.04, 1.0);
-    var camUp: vec3<f32> = vec3<f32>(noise(uniforms.time * 1.2) * 0.02 - 0.01, 1.0, 0.0);
+    var camFwd: vec3<f32> = vec3<f32>(0.0, 0.7 + noise(time * 0.8 + 4.0) * 0.08 - 0.04, 1.0);
+    var camUp: vec3<f32> = vec3<f32>(noise(time * 1.2) * 0.02 - 0.01, 1.0, 0.0);
 
     var color: vec3<f32> = march(uv, vec3<f32>(0.0, 1.9, 1.0)) - (length(uv - vec2<f32>(0.5)) - 0.3) * 0.05;
     return vec4<f32>(color, 1.0);
@@ -34,9 +31,9 @@ fn smootherstep(edge0: f32, edge1: f32, x: f32) -> f32 {
 }
 
 fn rand(n: f32) -> f32 {
-    var n = fract(n * 43758.5453);
-    n = n * n;
-    return fract(n * 43758.5453);
+    var n1 = fract(n * 43758.5453);
+    n1 = n1 * n1;
+    return fract(n1 * 43758.5453);
 }
 
 fn hash(n: f32) -> f32 {
@@ -72,14 +69,14 @@ fn rotationAlign(d: vec3<f32>, z: vec3<f32>) -> mat3x3<f32> {
     );
 }
 
-fn intersectPlane(origin: vec3<f32>, direction: vec3<f32>, point: vec3<f32>, normal: vec3<f32>) -> f32 {
-    return clamp(dot(point - origin, normal) / dot(direction, normal), -1.0, 9991999.0);
+fn intersectPlane(origin: vec3<f32>, direction: vec3<f32>, pointt: vec3<f32>, normal: vec3<f32>) -> f32 {
+    return clamp(dot(pointt - origin, normal) / dot(direction, normal), -1.0, 9991999.0);
 }
 
 fn calcRay(uv: vec2<f32>, fov: f32, aspect: f32) -> vec3<f32> {
-    var uv = uv * 2.0 - 1.0;
+    var uv1 = uv * 2.0 - 1.0;
     var d = 1.0 / tan(radians(fov) * 0.5);
-    return normalize(vec3<f32>(aspect * uv.x, uv.y, d));
+    return normalize(vec3<f32>(aspect * uv1.x, uv1.y, d));
 }
 
 fn getWave(position: vec2<f32>, dir: vec2<f32>, speed: f32, frequency: f32, iTimeshift: f32) -> vec2<f32> {
@@ -108,7 +105,7 @@ fn heightmap(worldPos: vec2<f32>) -> f32 {
 
     for (var i: i32 = 0; i < 5; i = i + 1) {
         dir = vec2<f32>(cos(angle), sin(angle));
-        res = getWave(p, dir, speed, freq, uniforms.time);
+        res = getWave(p, dir, speed, freq, time);
         p = p + dir * res.y * weight * 0.05;
         wave = wave + res.x * weight - d;
         angle = angle + 12.0;
@@ -167,9 +164,9 @@ fn objectsNormal(p: vec3<f32>, eps: f32) -> vec3<f32> {
 }
 
 fn objectsColor(id: i32, normal: vec3<f32>, ray: vec3<f32>) -> vec3<f32> {
-    return id == 1 ? vec3<f32>(0.85, 0.65, 0.55) * mix(0.8, 1.5, dot(normal, normalize(vec3<f32>(0.0, 1.0, 0.5))) * 0.5 + 0.5) :
-        id == 2 ? vec3<f32>(0.85, 0.65, 0.55) * 1.5 :
-        vec3<f32>(1.0, 1.0, 0.0);
+    if (id == 1) { return vec3<f32>(0.85, 0.65, 0.55) * mix(0.8, 1.5, dot(normal, normalize(vec3<f32>(0.0, 1.0, 0.5))) * 0.5 + 0.5); }
+    if (id == 2) { return vec3<f32>(0.85, 0.65, 0.55) * 1.5; }
+    return vec3<f32>(1.0, 1.0, 0.0);
 }
 
 fn marchObjects(eye: vec3<f32>, ray: vec3<f32>, wDepth: f32, color: vec4<f32>) -> vec4<f32> {
@@ -185,7 +182,12 @@ fn marchObjects(eye: vec3<f32>, ray: vec3<f32>, wDepth: f32, color: vec4<f32>) -
         }
         rayPos = rayPos + ray * dist;
     }
-    return dist < 0.01 ? vec4<f32>(objectsColor(id, objectsNormal(rayPos, 0.01), ray), depth) : color;
+    
+    if (dist < 0.01) {
+        return vec4<f32>(objectsColor(id, objectsNormal(rayPos, 0.01), ray), depth);
+    }
+    
+    return color;
 }
 
 fn waterColor(ray: vec3<f32>, normal: vec3<f32>, p: vec3<f32>) -> vec3<f32> {
@@ -213,11 +215,11 @@ fn waterColor(ray: vec3<f32>, normal: vec3<f32>, p: vec3<f32>) -> vec3<f32> {
     var atten: f32 = clamp(1.0 - (d * d) / (r * r), 0.0, 1.0);
     atten = atten * atten;
 
-    var point: vec3<f32> = vec3<f32>(0.75, 0.55, 0.45) * atten * (1.0 + fresnel) * 0.07;
+    var pointt: vec3<f32> = vec3<f32>(0.75, 0.55, 0.45) * atten * (1.0 + fresnel) * 0.07;
     var ambient: vec3<f32> = dot(normal, normalize(vec3<f32>(0.0, 1.0, 0.5))) * max(fresnel, 0.06) * vec3<f32>(0.1, 0.5, 1.0) * 0.85;
     var fog: f32 = smootherstep(25.0, 6.0, fogDist) * (1.0 / (fogDist * 0.1));
 
-    return color + (point + ambient) * fog;
+    return color + (pointt + ambient) * fog;
 }
 
 fn waterNormal(p: vec2<f32>, eps: f32) -> vec3<f32> {
@@ -257,28 +259,10 @@ fn marchWater(eye: vec3<f32>, ray: vec3<f32>, color: vec4<f32>) -> vec4<f32> {
 
 fn march(uv: vec2<f32>, camPos: vec3<f32>) -> vec3<f32> {
     var vm: mat4x4<f32> = viewMatrix(camFwd, camUp);
-    var ray: vec3<f32> = (vm * vec4<f32>(calcRay(uv, 80.0, uniforms.resolution.x / uniforms.resolution.y), 1.0)).xyz;
+    var ray: vec3<f32> = (vm * vec4<f32>(calcRay(uv, 80.0, resolution.x / resolution.y), 1.0)).xyz;
     var color: vec4<f32> = vec4<f32>(BACKGROUND, CAM_FAR);
     var waterColor: vec3<f32>;
     color = marchWater(camPos, ray, color);
     color = marchObjects(camPos, ray, color.w, color);
     return color.rgb;
-}
-
-fn mainImage([[builtin(frag_coord)]] fragCoord: vec4<f32>) -> [[location(0)]] vec4<f32> {
-    var uv: vec2<f32> = fragCoord.xy / uniforms.resolution;
-    var s: f32 = sin(uniforms.time);
-    var c: f32 = cos(uniforms.time);
-
-    artifactRotation = mat3x3<f32>(
-        vec3<f32>(c, 0.0, s),
-        vec3<f32>(0.0, 1.0, 0.0),
-        vec3<f32>(-s, 0.0, c)
-    ) * rotationAlign(vec3<f32>(0.0, 1.0, 0.0), vec3<f32>(s * 0.2, 1.0, c * 0.2 + 0.3));
-    artifactOffset = vec3<f32>(s * 0.4, c * 0.3 - 1.7, -6.0);
-
-    camFwd = vec3<f32>(0.0, 0.7 + noise(uniforms.time * 0.8 + 4.0) * 0.08 - 0.04, 1.0);
-    camUp = vec3<f32>(noise(uniforms.time * 1.2) * 0.02 - 0.01, 1.0, 0.0);
-
-    return vec4<f32>(march(uv, vec3<f32>(0.0, 1.9, 1.0)) - (length(uv - vec2<f32>(0.5)) - 0.3) * 0.05, 1.0);
 }

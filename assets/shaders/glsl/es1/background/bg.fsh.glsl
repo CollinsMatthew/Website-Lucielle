@@ -9,7 +9,7 @@ const float PI = radians(180.0);
 uniform float time;
 uniform vec2 resolution;
 
-in vec4 vColor;
+vec4 vColor;
 
 vec3 artifactOffset;
 mat3 artifactRotation;

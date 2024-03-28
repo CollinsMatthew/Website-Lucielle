@@ -1,5 +1,4 @@
 @charset "UTF-8";
-/* base - start */
 
 @font-face {
     font-family: Comfortaa;
@@ -26,11 +25,15 @@
 /* @formatter:on */
 
 html * {
-    font-family: Comfortaa, 'Courier New', Courier, monospace;
+    font-family: Comfortaa, 'Verdana Pro', 'Verdana', 'Courier New', Courier, monospace;
     color: rgb(var(--text));
     scrollbar-color: rgb(var(--purple)) rgb(var(--mantle));
     scrollbar-width: auto;
     z-index: 1 !important;
+}
+
+.profile-bio {
+    text-align: left;
 }
 
 canvas {
@@ -85,17 +88,10 @@ main {
     color: rgb(var(--text));
 }
 
-/* base - end */
-
-
-/* useful stuff - start */
-
 /* @formatter:off */
 .no-break 	{ white-space: nowrap; }
 .no-break * { display:     inline; }
 /* @formatter:on */
-
-/* useful stuff - end */
 
 .flexbox {
     display: inline-block;
@@ -114,8 +110,6 @@ main {
     border-radius: 4px;
     animation: header_hover_in 0.3125s forwards;
 }
-
-/* header stuff - start */
 
 .header:before {
     animation: none;
@@ -220,11 +214,6 @@ main {
     }
 }
 
-/* header stuff - end */
-
-
-/* footer stuff - start */
-
 .footer:before {
     animation: none;
 }
@@ -288,5 +277,3 @@ main {
     to   { color: rgb(var(--blue)); }
 }
 /* @formatter:on */
-
-/* footer stuff - end */
