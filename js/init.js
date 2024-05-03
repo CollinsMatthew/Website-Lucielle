@@ -6,7 +6,7 @@ import * as cards from "./cards.js";
 async function init() {
     document.documentElement.style.setProperty("--background-color", "#000000");
 
-    themes.init();
+    await themes.init();
     shaders.init();
     cards.init();
 

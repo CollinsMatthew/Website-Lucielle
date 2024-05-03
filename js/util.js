@@ -1,5 +1,3 @@
-
-
 // <t\:[0-9]+(?:\:[?TtDdFfR])*>
 // TODO: ... | add export function for discord-date-type conversion >:(
 
