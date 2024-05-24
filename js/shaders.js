@@ -24,21 +24,23 @@ async function initGL(canvas, context, wglVersion) {
     context.bufferData(context.ARRAY_BUFFER, new Float32Array([
         -1.0,  1.0, 0.0,
         -1.0, -1.0, 0.0,
-         1.0, -1.0, 0.0,
-         1.0,  1.0, 0.0
+        1.0, -1.0, 0.0,
+        1.0,  1.0, 0.0
     ]), context.STATIC_DRAW);
-    context.bindBuffer(context.ARRAY_BUFFER, null);
 
     const colors = context.createBuffer();
     context.bindBuffer(context.ARRAY_BUFFER, colors);
-    context.bufferData(context.ARRAY_BUFFER, new Float32Array([1.0, 1.0, 1.0, 1.0]), context.STATIC_DRAW);
-    context.bindBuffer(context.ARRAY_BUFFER, null);
+    context.bufferData(context.ARRAY_BUFFER, new Float32Array([
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
+        1.0, 1.0, 0.0, 1.0
+    ]), context.STATIC_DRAW);
 
     const elements_indices = [3, 2, 1, 3, 1, 0];
     const elements = context.createBuffer();
     context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, elements);
     context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(elements_indices), context.STATIC_DRAW);
-    context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, null);
 
     const es_key = wglVersion === 2 ? "es3" : "es1";
 
@@ -60,20 +62,20 @@ async function initGL(canvas, context, wglVersion) {
         .then(response => response.text())
         .then(text => fragment_shader_code = text)
         .catch(error => console.error(error));
-
     const fragment_shader = context.createShader(context.FRAGMENT_SHADER);
     context.shaderSource(fragment_shader, fragment_shader_code);
     context.compileShader(fragment_shader);
-    let fragment_shader_log = context.getShaderInfoLog(vertex_shader);
-    if (fragment_shader_log == null || vertex_shader_log.trim().length === 0) {
+    let fragment_shader_log = context.getShaderInfoLog(fragment_shader);
+    if (fragment_shader_log == null || fragment_shader_log.trim().length === 0) {
         console.info("fragment shader loaded.");
     } else console.warn(`fragment shader couldn't be loaded! (${fragment_shader_log})`);
 
     const shaderProgram = context.createProgram();
-
     context.attachShader(shaderProgram, vertex_shader);
     context.attachShader(shaderProgram, fragment_shader);
     context.linkProgram(shaderProgram);
+    if (!context.getProgramParameter(shaderProgram, context.LINK_STATUS))
+        console.warn("shaders couldn't be linked! :(");
     context.useProgram(shaderProgram);
 
     const position = context.getAttribLocation(shaderProgram, "position");
@@ -98,7 +100,7 @@ async function initGL(canvas, context, wglVersion) {
     const unimloc_time = context.getUniformLocation(shaderProgram, "time");
     const unimloc_res = context.getUniformLocation(shaderProgram, "resolution");
 
-    async function renderLoop(time) {
+    function renderLoop(time) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -108,6 +110,7 @@ async function initGL(canvas, context, wglVersion) {
         context.uniform2fv(unimloc_res, [canvas.width, canvas.height]);
 
         context.viewport(0, 0, canvas.width, canvas.height);
+        context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
         context.drawElements(context.TRIANGLES, elements_indices.length, context.UNSIGNED_SHORT, 0);
 
         window.requestAnimationFrame(renderLoop);
@@ -115,6 +118,7 @@ async function initGL(canvas, context, wglVersion) {
 
     window.requestAnimationFrame(renderLoop);
 }
+
 
 async function initWGPU(canvas, context) {
     console.info("detected wgpu");
