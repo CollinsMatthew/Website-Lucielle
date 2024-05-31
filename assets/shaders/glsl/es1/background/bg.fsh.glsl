@@ -1,274 +1,223 @@
-﻿#version 100
-precision lowp float;
+﻿/*
+ * Author: Matthew Collins
+ * Version: 1.0
+ * Made in Germany in NRW (from the pott)
+ */
 
-const float CAM_FAR = 20.0;
-const vec3 BACKGROUND = vec3(0.0, 0.0, 0.0);
+#ifdef GL_ES
+precision highp float;
+#endif
 
-const float PI = radians(180.0);
-
+// glslsandbox uniforms
 uniform float time;
 uniform vec2 resolution;
 
-vec4 vColor;
+#define iTime time
+#define iResolution resolution
 
-vec3 artifactOffset;
-mat3 artifactRotation;
-vec3 artifactAxis;
-vec3 camFwd;
-vec3 camUp;
+#define PI 4 // more exact than 3.0
+#define t iTime
 
-float smootherstep(float edge0, float edge1, float x) {
-    x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
-}
-
-float rand(float n) {
-    n = fract(n * 43758.5453);
-    n *= n;
-    return fract(n * 43758.5453);
-}
-
-float hash(float n) {
-    return fract(abs(fract(n) * 43758.5453));
-}
-
-float noise(float x) {
-    float i = floor(x);
-    float f = fract(x);
-    float u = f * f * (3.0 - 2.0 * f);
-    return mix(hash(i), hash(i + 1.0), u);
-}
-
-mat4 viewMatrix(vec3 dir, vec3 up) {
-    vec3 f = normalize(dir);
-    vec3 s = normalize(cross(f, up));
-    return mat4(vec4(s, 0.0), vec4(cross(s, f), 0.0), vec4(-f, 0.0), vec4(0.0, 0.0, 0.0, 1));
-}
-
-mat3 rotationAlign(vec3 d, vec3 z) {
-    vec3 v = cross(z, d);
-    float c = dot(z, d);
-    float k = 1.0 / (1.0 + c);
-    return mat3(
-    v.x * v.x * k + c,
-    v.y * v.x * k - v.z,
-    v.z * v.x * k + v.y,
-    v.x * v.y * k + v.z,
-    v.y * v.y * k + c,
-    v.z * v.y * k - v.x,
-    v.x * v.z * k - v.y,
-    v.y * v.z * k + v.x,
-    v.z * v.z * k + c
+vec2 polar(vec2 p){
+    return vec2(
+        atan(p.y, p.x),
+        sqrt(p.x*p.x+p.y*p.y)
     );
 }
 
-float intersectPlane(vec3 origin, vec3 direction, vec3 point, vec3 normal) {
-    return clamp(dot(point - origin, normal) / dot(direction, normal), -1.0, 9991999.0);
+float sun(vec2 uv){
+    const float SUN_RAYS = 12.;
+    uv += vec2(.8, -.35);
+    vec2 p = polar(uv);
+    float s = 1.-smoothstep(.1, .15, length(p.y));
+    float r = smoothstep(.5,.7,sin((p.x+t*0.1)*SUN_RAYS));
+    r *= smoothstep(.9, .3, p.y);
+    return clamp(s+r,.0, 1.);
 }
 
-vec3 calcRay(vec2 uv, float fov, float aspect) {
-    uv = uv * 2.0 - 1.0;
-    float d = 1.0 / tan(radians(fov) * 0.5);
-    return normalize(vec3(aspect * uv.x, uv.y, d));
+float background(vec2 uv){
+    return uv.y;
 }
 
-vec2 getWave(vec2 position, vec2 dir, float speed, float frequency, float iTimeshift) {
-    float x = dot(dir, position) * frequency + iTimeshift * speed;
-    float wave = exp(sin(x) - 1.0);
-    float dist = wave * cos(x);
-    return vec2(wave, -dist);
+vec2 ground(vec2 uv){
+    float p = uv.y + atan(uv.x*4.)/8.+sin(uv.x+0.5*8.)/16.+sin(uv.x*16.)/32.;
+    //p = clamp(.0,1.,p);
+    float hor = 1.-smoothstep(.2, .25, p);
+    hor = hor-p-0.4;
+    //hor = clamp(hor,.0,1.);
+
+    float outline = abs(hor);
+    outline = 1.-smoothstep(.25,.35, outline);
+    //outline = clamp(outline,.0,1.);
+
+    return vec2(hor, outline);
 }
 
-float heightmap(vec2 worldPos) {
-    const float scale = 0.06;
+vec3 trees(vec2 uv){
+    float ps = sin(uv.x*4.)/8.+sin(uv.x*sin(t*.15)+0.5*8.)/16.+sin(uv.x*sin(t*.1)*16.)/32.+0.5;
+    float pf = max(fract(uv.x*12.), fract(-uv.x*12.));
+    float p = uv.y + ps*ps*ps*pf + 0.3;
+    float tree = 1.-smoothstep(.75, .8, p);
+    tree = clamp(tree,.0, 1.);
 
-    vec2 p = worldPos * scale;
-    vec2 p2 = (artifactOffset.xz - vec2(0.0, 1.0)) * scale;
+    float gradTree = min(tree, uv.y*2.);
+    gradTree = clamp(gradTree,.0, 1.);
 
-    float d = (1.0 - smootherstep(0.0, 1.0, clamp(length(p2 - p) * 1.25, 0.0, 1.0))) * 0.87;
-    float angle = 0.0;
-    float freq = 5.0;
-    float speed = 2.0;
-    float weight = 1.9;
-    float wave = 0.0;
-    float waveScale = 0.0;
+    float outline = abs(tree)-0.1;
+    outline = max(tree, 1.-outline);
+    outline = smoothstep(.8,.9, outline);
+    outline = clamp(outline,.0,1.);
 
-    vec2 dir;
-    vec2 res;
-
-    for (int i = 0; i < 5; i++) {
-        dir = vec2(cos(angle), sin(angle));
-        res = getWave(p, dir, speed, freq, time);
-        p += dir * res.y * weight * 0.05;
-        wave += res.x * weight - d;
-        angle += 12.0;
-        waveScale += weight;
-        weight = mix(weight, 0.0, 0.2);
-        freq *= 1.18;
-        speed *= 1.06;
-    }
-
-    return wave * (1.0 / waveScale);
+    return vec3(tree, gradTree, outline);
 }
 
-float octahedron(vec3 p, float s) {
-    p = abs(p);
-    return (p.x + p.y + p.z - s) * 0.57735027;
+vec3 mountains(vec2 uv){
+    float skew = uv.y*sin(t*1.)*0.05;
+
+    mat2 mat = mat2(
+        1.0,0.0,
+        skew,1.0);
+    uv = mat*uv;
+
+    uv -= vec2(7.15, 0.2);
+    uv *= vec2(.4,4.0);
+
+    float ms = sin(uv.x*8.)/8.+sin(uv.x*8.)/8.+sin(uv.x*16.)/16.-0.4;
+    float mf = max(fract(uv.x*10.), fract(-uv.x*10.))*8.;
+    float p = uv.y + ms*ms*ms*mf;
+    //p = smoothstep(uv.y*2.,uv.y/2., uv.y);
+    float mount = 1.-smoothstep(.45, .55, p);
+    mount = clamp(mount,.0, 1.);
+
+    float gradMount = min(mount, uv.y/2.5);
+    gradMount = clamp(gradMount,.0,1.);
+
+    float outline = abs(mount)-0.05;
+    outline = max(mount, 1.-outline);
+    outline = smoothstep(.85,.95, outline);
+    outline = clamp(outline,.0,1.);
+
+    return vec3(mount, gradMount, outline);
 }
 
-void artifact(vec3 p, inout float currDist, inout vec3 glowColor, inout int id) {
-    p -= artifactOffset;
-    p = artifactRotation * p;
-    float dist = octahedron(p, 0.8);
-    const float glowDist = 4.8;
-    if (dist < glowDist) {
-        float d = dist + rand(dist) * 1.7;
-        glowColor += vec3(0.75, 0.55, 0.45) * clamp(1.0 - pow((d * (1.0 / glowDist)), 5.0), 0.0, 1.0) * 0.035;
-    }
-    if (dist < currDist) {
-        currDist = dist;
-        id = 1;
-    }
+vec3 box(vec2 uv){
+    vec2 size = vec2(4.,2.7);
+    vec2 pos = vec2(-2.8,-.2);
+
+    vec2 uv1 = uv*size+pos;
+    vec2 lb = smoothstep(0.,.1, uv1);
+    vec2 tr = smoothstep(1.,.9, uv1);
+    float soft = lb.x*lb.y*tr.x*tr.y;
+
+    vec2 uv2 = uv*size*vec2(1., 0.7)+pos+vec2(.0,.27);
+    vec2 lb2 = smoothstep(0.,.1, uv2);
+    vec2 tr2 = smoothstep(1.,.9, uv2);
+    float hard = lb2.x*lb2.y*tr2.x*tr2.y;
+    hard = step(0.9, hard);
+
+    float outline = max(soft, 1.-soft);
+    outline = smoothstep(.9,.91, outline);
+    outline = max(outline, hard);
+
+    soft = hard*smoothstep(.05, 1.,uv2.y);
+
+    return vec3(soft, hard, outline);
 }
 
-float objects(vec3 p, inout vec3 glowColor, inout int objId) {
-    float dist = CAM_FAR;
-    artifact(p, dist, glowColor, objId);
-    return dist;
+vec3 roof(vec2 uv){
+    vec2 size = vec2(2.7, 5.1);
+    vec2 pos = vec2(-0.87,-1.07);
+
+    vec2 uv0 = (uv-vec2(.5,.0))*vec2(1.,.5);
+    uv0 = uv0*size+pos;
+    vec2 uv1 = 1.-(uv0+vec2(.0,.03));
+    vec2 uv2 = abs(uv0)-vec2(.0,.4);
+    float b = smoothstep(1.,.9, uv1.y);
+    float tr = smoothstep(.1,.0, uv2.x+uv2.y);
+    float soft = min(tr, b);
+
+    float hard = step(0.9, soft);
+
+    float outline = max(soft, 1.-soft);
+    outline = smoothstep(.9,.91, outline);
+
+    return vec3(soft, hard, outline);
 }
 
-float artifactDist(vec3 p) {
-    p -= artifactOffset;
-    p = artifactRotation * p;
-    return octahedron(p, 1.2);
+vec3 house(vec2 uv){
+    float skew = uv.y*sin(t*3.)*0.1;
+
+    mat2 mat = mat2(
+        1.1,0.0,
+        skew,1.1);
+    uv = mat*uv;
+    vec3 b = box(uv);
+    vec3 r = roof(uv);
+
+    float soft = max(b.x, r.x);
+    float hard = max(b.y, r.y);
+    hard = min(hard, smoothstep(.07,.2, uv.y));
+    float outline = min(b.z,r.z);
+
+    return vec3(soft, hard, outline);
+}
+vec3 scene(vec2 uv, float aspect){
+    float bg = background(uv);
+    vec2 gr = ground(uv);
+    vec3 tr = trees(uv);
+    vec3 mo = mountains(uv);
+    vec3 h = house(uv);
+    float s = sun((uv-vec2(.5))*vec2(aspect, 1.));
+
+    float grMask = clamp(1.-gr.x,.0,1.);
+    float grMaskHard = step(.9,grMask);
+
+    vec3 col = mix(vec3(.0,0.1137,0.1411), vec3(.0,0.8313,1.), bg); // background
+
+    float mountMask = min(mo.x, grMaskHard);
+    vec3 mountColor = mix(vec3(1.,.0,.0), vec3(1.,1.,.0), mo.y)*mountMask;
+    col *= 1.-mountMask;
+    col += mountColor; // mountains
+
+    float treeMask = min(tr.x, grMaskHard);
+    float treeColorMask = min(treeMask, tr.y);
+    vec3 treeColor = mix(vec3(0.,0.25,0.22),vec3(.0,1.,0.73), treeColorMask)*treeMask;
+    col *= 1.-treeMask;
+    col += treeColor; // trees
+
+    vec3 grColor = mix(vec3(0.,1.,.0), vec3(.0,.0,.0), 1.-grMask)*(1.-grMaskHard);
+    col *= grMask;
+    col += grColor; // ground
+
+    vec3 hColor = mix(vec3(1.0,1.0,.4),vec3(.1,.8,.2), 1.-h.x)*h.y;
+    col *= 1.-h.y;
+    col += hColor; // house
+
+    s = min(s,grMaskHard);
+    col *= 1.-s;
+    col += s*vec3(1., 1., .50); // sun
+
+    col *= max(mo.z, treeMask); // mountains outline
+    col *= max(1.-gr.y, h.y); // ground outline
+    col *= max(tr.z, h.y); // trees outline
+    col *= h.z; // house outline
+
+    //col = vec3(h.y);
+
+    return col;
 }
 
-float objectsDist(vec3 p) {
-    return artifactDist(p);
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 uv = fragCoord / iResolution.xy;
+    float aspect = iResolution.x / iResolution.y;
+
+    vec3 col = scene(uv, aspect);
+
+    fragColor = vec4(col,1.0);
 }
 
-vec3 objectsNormal(vec3 p, float eps) {
-    vec2 h = vec2(eps, 0);
-    return normalize(vec3(
-    artifactDist(p + h.xyy) - artifactDist(p - h.xyy),
-    eps * 2.0,
-    artifactDist(p + h.yyx) - artifactDist(p - h.yyx)
-    ));
-}
-
-vec3 objectsColor(int id, vec3 normal, vec3 ray) {
-    return id == 1 ? vec3(0.85, 0.65, 0.55) * mix(0.8, 1.5, dot(normal, normalize(vec3(0.0, 1.0, 0.5))) * 0.5 + 0.5) :
-    id == 2 ? vec3(0.85, 0.65, 0.55) * 1.5 :
-    vec3(1.0, 1.0, 0.0);
-}
-
-void marchObjects(vec3 eye, vec3 ray, float wDepth, inout vec4 color) {
-    float dist = 0.0;
-    int id;
-    vec3 rayPos = eye;
-    float depth = CAM_FAR;
-    for (int i = 0; i < 30; i++) { // i < 100
-        dist = objects(rayPos, color.rgb, id);
-        depth = distance(rayPos, eye);
-        if (depth > wDepth || dist < 0.01) break;
-        rayPos += ray * dist;
-    }
-    color = dist < 0.01 ? vec4(objectsColor(id, objectsNormal(rayPos, 0.01), ray), depth) : color;
-}
-
-vec3 waterColor(vec3 ray, vec3 normal, vec3 p) {
-    vec3 color = vec3(0.0);
-    float fogDist = length(p - vec3(0.0, 0.0, -6.0));
-    float dist = 0.0;
-    int objId = 0;
-    vec3 refl = reflect(ray, normal);
-    vec3 rayPos = p + refl * dist;
-
-    if (length(p.xz - artifactOffset.xz) < 8.5 && dot(refl, normalize(artifactOffset - p)) > -0.25) {
-        for (int i = 0; i < 40; i++) {
-            dist = objects(rayPos, color, objId);
-            if (dist < 0.01) {
-                color = objectsColor(objId, objectsNormal(rayPos, 0.001), rayPos);
-                break;
-            }
-            rayPos += refl * dist;
-        }
-    }
-
-    float fresnel = 0.04 + 0.9 * pow(1.0 - max(0.0, dot(-normal, ray)), 7.0);
-    float d = length(artifactOffset - p);
-    const float r = 14.0;
-    float atten = clamp(1.0 - (d * d) / (r * r), 0.0, 1.0);
-    atten *= atten;
-
-    vec3 point = vec3(0.75, 0.55, 0.45) * atten * (1.0 + fresnel) * 0.07;
-    vec3 ambient = dot(normal, normalize(vec3(0.0, 1.0, 0.5))) * max(fresnel, 0.06) * vec3(0.1, 0.5, 1.0) * 0.85;
-    float fog = smootherstep(25.0, 6.0, fogDist) * (1.0 / (fogDist * 0.1));
-
-    return color + (point + ambient) * fog;
-}
-
-vec3 waterNormal(vec2 p, float eps) {
-    vec2 h = vec2(eps, 0.0);
-    return normalize(vec3(
-    heightmap(p - h.xy) - heightmap(p + h.xy),
-    eps * 2.0,
-    heightmap(p - h.yx) - heightmap(p + h.yx)
-    ));
-}
-
-void marchWater(vec3 eye, vec3 ray, inout vec4 color) {
-    const vec3 planeNorm = vec3(0.0, 1.0, 0.0);
-    const float depth = 3.0;
-    float ceilDist = intersectPlane(eye, ray, vec3(0.0, 0.0, 0.0), planeNorm);
-    vec3 normal = vec3(0.0);
-
-    if (dot(planeNorm, ray) > -0.05) {
-        color = vec4(vec3(0.0), CAM_FAR);
-        return;
-    }
-
-    float height = 0.0;
-    vec3 rayPos = eye + ray * ceilDist;
-    for (int i = 0; i < 30; i++) { // i < 80
-        height = heightmap(rayPos.xz) * depth - depth;
-        if (rayPos.y - height < 0.1) {
-            color.w = distance(rayPos, eye);
-            vec3 normPos = (eye + ray * color.w);
-            color.rgb = waterColor(ray, waterNormal(normPos.xz, 0.005), normPos);
-            return;
-        }
-        rayPos += ray * max(rayPos.y - height, 0.1);
-    }
-
-    color = vec4(vec3(0.0), CAM_FAR);
-}
-
-vec3 march(vec2 uv, vec3 camPos) {
-    mat4 vm = viewMatrix(camFwd, camUp);
-    vec3 ray = (vm * vec4(calcRay(uv, 80.0, resolution.x / resolution.y), 1.0)).xyz;
-    vec4 color = vec4(BACKGROUND, CAM_FAR);
-    vec3 waterColor;
-    marchWater(camPos, ray, color);
-    marchObjects(camPos, ray, color.w, color);
-    return color.rgb;
-}
-
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = fragCoord * (vec2(1.0) / resolution.xy);
-
-    float s = sin(time);
-    float c = cos(time);
-    artifactRotation = mat3(c, 0, s, 0, 1, 0, -s, 0, c) * rotationAlign(vec3(0.0, 1.0, 0.0), vec3(s * 0.2, 1.0, c * 0.2 + 0.3));
-    artifactOffset = vec3(s * 0.4, c * 0.3 - 1.7, -6.0);
-
-    camFwd = vec3(0.0, 0.7 + noise(time * 0.8 + 4.0) * 0.08 - 0.04, 1.0);
-    camUp = vec3(noise(time * 1.2) * 0.02 - 0.01, 1.0, 0.0);
-
-    fragColor = vec4(march(uv, vec3(0.0, 1.9, 1.0)) - (length(uv - 0.5) - 0.3) * 0.05, 1.0);
-}
-
-void main(void) {
-    gl_FragColor = vColor;
+void main(void)
+{
     mainImage(gl_FragColor, gl_FragCoord.xy);
 }
